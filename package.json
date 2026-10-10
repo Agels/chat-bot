@@ -1,0 +1,17 @@
+{
+  "name": "chat-bot",
+  "version": "1.0.0",
+  "description": "Maju AI (Hacktiv8) chat bot - backend and frontend monorepo",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w backend",
+    "start": "npm run start -w backend",
+    "dev:backend": "npm run dev -w backend",
+    "start:backend": "npm run start -w backend"
+  },
+  "license": "ISC"
+}
