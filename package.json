@@ -13,5 +13,8 @@
     "dev:backend": "npm run dev -w backend",
     "start:backend": "npm run start -w backend"
   },
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.6"
+  }
 }

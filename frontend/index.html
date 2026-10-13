@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Finance Assistant</title>
+  <script>
+    try {
+      if (localStorage.getItem('theme') === 'dark') document.documentElement.dataset.theme = 'dark';
+    } catch (e) {}
+  </script>
+  <link rel="icon" href="data:," />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Lora:wght@500;600&display=swap" />
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <header class="topbar">
+    <h1>Finance Assistant</h1>
+    <button type="button" id="theme-toggle" class="quiet-button">Dark theme</button>
+  </header>
+
+  <nav class="views" aria-label="Sections">
+    <button type="button" id="show-home" class="view-tab" aria-pressed="true">Home</button>
+    <button type="button" id="show-notebook" class="view-tab" aria-pressed="false">Notebook</button>
+    <button type="button" id="show-chat" class="view-tab" aria-pressed="false">Chat</button>
+    <button type="button" id="new-chat" class="quiet-button" hidden>New chat</button>
+  </nav>
+
+  <main id="home" class="chat home" tabindex="0" aria-label="Home">
+    <div class="column">
+      <section class="today">
+        <div id="today-known" hidden>
+          <p id="today-label" class="today-label"></p>
+          <p id="today-amount" class="today-amount"></p>
+          <p id="today-per" class="today-per"></p>
+          <p id="today-note" class="hint"></p>
+          <button type="button" id="ask-month" class="starter">Ask how my month is going</button>
+        </div>
+        <div id="today-unknown">
+          <h2>How much can you spend today?</h2>
+          <p class="hint">Add your monthly income and this page works it out: what is left this month, divided by the days that remain.</p>
+          <button type="button" id="add-income" class="starter">Add my income</button>
+        </div>
+      </section>
+
+      <section>
+        <h3>Add an expense</h3>
+        <form id="expense-form" class="profile-form" novalidate>
+          <div class="field">
+            <label for="expense-label">What you bought</label>
+            <input type="text" id="expense-label" maxlength="80" autocomplete="off" />
+          </div>
+          <div class="field">
+            <label for="expense-amount">Amount</label>
+            <input type="text" id="expense-amount" inputmode="decimal" autocomplete="off" />
+          </div>
+          <div class="field">
+            <label for="expense-category">Category</label>
+            <select id="expense-category"></select>
+          </div>
+          <div class="profile-actions">
+            <button type="submit" class="starter">Add expense</button>
+            <span id="expense-status" class="status" role="status"></span>
+          </div>
+        </form>
+      </section>
+
+      <section>
+        <h3>Budgets this month</h3>
+        <ul id="budget-list" class="budgets"></ul>
+        <p id="budget-none" class="hint">You have no budgets yet. Set a limit for a category to see how much of it is used.</p>
+        <button type="button" id="set-budgets" class="quiet-button link-button">Set budgets</button>
+      </section>
+
+      <section>
+        <h3>Savings goal</h3>
+        <div id="goal-list"></div>
+        <p id="goal-note" class="bar-note"></p>
+        <button type="button" id="set-goal" class="quiet-button link-button">Set a goal</button>
+      </section>
+
+      <section id="recent-section" hidden>
+        <h3>Latest expenses</h3>
+        <ul id="recent-list" class="entries"></ul>
+        <button type="button" id="see-notebook" class="quiet-button link-button">See all expenses</button>
+      </section>
+    </div>
+  </main>
+
+  <main id="chat-scroll" class="chat" tabindex="0" aria-label="Conversation" hidden>
+    <div class="column">
+      <section id="empty-state" class="empty">
+        <h2>What's on your mind about money?</h2>
+        <p>Tell me what you earn and what you spend, or attach a receipt, and I'll write it in your notebook. After that you can ask how your month is going.</p>
+        <ul class="starters" aria-label="Ways to start">
+          <li><button type="button" id="starter-receipt" class="starter">Add a receipt</button></li>
+          <li><button type="button" class="starter starter-question">How is my month going?</button></li>
+          <li><button type="button" class="starter starter-question">Help me make a monthly budget</button></li>
+        </ul>
+      </section>
+      <div id="chat-box" class="thread" role="log" aria-live="polite"></div>
+    </div>
+  </main>
+
+  <main id="notebook" class="chat notebook" tabindex="0" aria-label="Notebook" hidden>
+    <div class="column">
+      <section id="notebook-empty" class="empty">
+        <h2>Your notebook is empty</h2>
+        <p>Attach a receipt in the chat, or tell the assistant what you spent. Each expense is written here.</p>
+        <button type="button" id="go-to-chat" class="starter">Go to the chat</button>
+      </section>
+
+      <section id="notebook-month" hidden>
+        <div class="month-bar">
+          <button type="button" id="month-prev" class="quiet-button">Earlier</button>
+          <h2 id="month-title"></h2>
+          <button type="button" id="month-next" class="quiet-button">Later</button>
+        </div>
+        <p id="month-total" class="month-total"></p>
+        <p id="month-left" class="hint"></p>
+        <div id="month-details">
+          <h3>By category</h3>
+          <dl id="category-list" class="ledger"></dl>
+          <h3>Expenses</h3>
+          <ul id="entry-list" class="entries"></ul>
+        </div>
+      </section>
+
+      <section>
+        <h3>About you</h3>
+        <p class="hint">The assistant uses these details in its answers. You can also tell it in the chat.</p>
+        <form id="profile-form" class="profile-form" novalidate>
+          <div class="field">
+            <label for="profile-currency">Currency, for example Rp or $</label>
+            <input type="text" id="profile-currency" maxlength="8" autocomplete="off" />
+          </div>
+          <div class="field">
+            <label for="profile-income">Monthly income</label>
+            <input type="text" id="profile-income" inputmode="decimal" autocomplete="off" />
+          </div>
+          <div class="field">
+            <label for="profile-saving">How much you save each month</label>
+            <input type="text" id="profile-saving" inputmode="decimal" autocomplete="off" />
+          </div>
+          <div class="field">
+            <label for="profile-goal-name">What you are saving for</label>
+            <input type="text" id="profile-goal-name" maxlength="40" autocomplete="off" />
+          </div>
+          <div class="field">
+            <label for="profile-goal-amount">How much you want to save</label>
+            <input type="text" id="profile-goal-amount" inputmode="decimal" autocomplete="off" />
+          </div>
+          <div class="field">
+            <label for="profile-goal-saved">Saved so far</label>
+            <input type="text" id="profile-goal-saved" inputmode="decimal" autocomplete="off" />
+          </div>
+          <div class="profile-actions">
+            <button type="submit" class="starter">Save details</button>
+            <span id="profile-status" class="status" role="status"></span>
+          </div>
+        </form>
+      </section>
+
+      <section>
+        <h3>Budgets per month</h3>
+        <p class="hint">Set a spending limit for the categories you want to watch. Leave the others empty.</p>
+        <form id="budget-form" novalidate>
+          <div id="budget-fields" class="profile-form"></div>
+          <div class="profile-actions budget-actions">
+            <button type="submit" class="starter">Save budgets</button>
+            <span id="budget-status" class="status" role="status"></span>
+          </div>
+        </form>
+      </section>
+
+      <section class="storage">
+        <p class="limits">Your notebook is saved in this browser only. It is sent to Google Gemini with each message so the assistant can read it.</p>
+        <button type="button" id="erase-notebook" class="quiet-button">Erase notebook</button>
+      </section>
+    </div>
+  </main>
+
+  <footer id="composer" class="composer">
+    <div class="column">
+      <div id="attachment" class="attachment" hidden>
+        <p><strong id="attachment-name"></strong> will be sent to Google Gemini to be read.</p>
+        <button type="button" id="attachment-remove" class="quiet-button">Remove</button>
+      </div>
+      <p id="attachment-error" class="attachment-error" role="alert" hidden></p>
+      <form id="chat-form">
+        <input type="file" id="file-input" accept="image/png,image/jpeg,image/webp,application/pdf" hidden />
+        <button type="button" id="attach-button" class="attach" aria-label="Attach a photo or PDF">Attach</button>
+        <label for="user-input" class="visually-hidden">Your message</label>
+        <input type="text" id="user-input" placeholder="Ask about money" autocomplete="off" />
+        <button type="submit">Send</button>
+      </form>
+      <p class="limits">This assistant gives general information. It is not a licensed financial adviser, so check big decisions with one.</p>
+    </div>
+  </footer>
+  <script src="script.js"></script>
+</body>
+</html>
